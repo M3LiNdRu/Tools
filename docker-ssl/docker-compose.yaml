@@ -1,0 +1,9 @@
+services:
+
+  ssl-cert-generator:
+    container_name: ssl-cert-generator
+    image: stakater/ssl-certs-generator:latest
+    environment:
+      - SSL_SUBJECT=test-ca
+    volumes:
+      - ./tmp/certs:/certs
