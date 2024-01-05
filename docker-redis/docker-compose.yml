@@ -1,0 +1,17 @@
+services:
+  redis:
+    container_name: local-redis
+    image: redis
+    ports: 
+      - 6379:6379
+
+  redis-commander:
+    container_name: local-redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+    - REDIS_HOSTS=local:redis:6379
+    ports:
+    - 8082:8081
+    depends_on:
+     - redis

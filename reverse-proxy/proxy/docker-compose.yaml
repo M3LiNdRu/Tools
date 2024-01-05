@@ -1,0 +1,23 @@
+services:
+  reverse-proxy:
+    container_name: reverse-proxy
+    image: nginx:stable-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./conf/:/etc/nginx/conf.d/
+      - ./html/:/var/www/html/
+      - ./includes/:/etc/nginx/includes/
+      - ./ssl/:/etc/ssl/certs/nginx/
+    networks:
+      - webservice-1
+      - webservice-2
+
+  networks:
+    webservice-1:
+      external:
+        name: webservice-1_default
+    webservice-2:
+      external:
+        name: webservice-2_default
