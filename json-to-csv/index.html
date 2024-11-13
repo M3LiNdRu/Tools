@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convert JSON to CSV</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    textarea { width: 100%; height: 150px; }
+    button { margin-top: 10px; }
+    #output { margin-top: 20px; white-space: pre-wrap; background-color: #f4f4f4; padding: 10px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+
+<h1>JSON to CSV Converter</h1>
+
+<textarea id="jsonInput" placeholder="Paste your JSON here"></textarea>
+<button onclick="convertToCsv()">Convert to CSV</button>
+
+<h2>CSV Output:</h2>
+<div id="output"></div>
+
+<script>
+  function jsonToCsv(jsonArray) {
+    const headers = Object.keys(jsonArray[0]);
+    const csvRows = [];
+    csvRows.push(headers.join(","));
+    for (const row of jsonArray) {
+      const values = headers.map(header => JSON.stringify(row[header] ?? ""));
+      csvRows.push(values.join(","));
+    }
+    return csvRows.join("\n");
+  }
+
+  function convertToCsv() {
+    const jsonInput = document.getElementById("jsonInput").value;
+    const outputDiv = document.getElementById("output");
+
+    try {
+      const jsonArray = JSON.parse(jsonInput);
+      if (!Array.isArray(jsonArray)) throw new Error("JSON input should be an array of objects.");
+      
+      const csv = jsonToCsv(jsonArray);
+      outputDiv.textContent = csv;
+    } catch (error) {
+      outputDiv.textContent = "Invalid JSON format: " + error.message;
+    }
+  }
+</script>
+
+</body>
+</html>
