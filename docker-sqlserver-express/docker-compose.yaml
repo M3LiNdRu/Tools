@@ -1,0 +1,14 @@
+services:
+
+  sqlserver-express:
+    container_name: sqlserver-express
+    image: mcr.microsoft.com/mssql/server:latest
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=letmein_2025
+      - MSSQL_PID=Express
+    volumes:
+      - //c/mounts/sql:/var/opt/mssql/data
+      
