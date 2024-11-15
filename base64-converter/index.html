@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codificador i descodificador Base64</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Codificador i descodificador Base64</h2>
+    <textarea id="inputText" placeholder="Entra la cadena de text aquí..."></textarea>
+    <div>
+        <button onclick="encodeBase64()">Codifica en Base64</button>
+        <button onclick="decodeBase64()">Descodifica de Base64</button>
+    </div>
+    <textarea id="outputText" placeholder="Resultat..."></textarea>
+
+    <script>
+        function encodeBase64() {
+            const inputText = document.getElementById("inputText").value;
+            const encodedText = btoa(inputText);
+            document.getElementById("outputText").value = encodedText;
+        }
+
+        function decodeBase64() {
+            try {
+                const inputText = document.getElementById("inputText").value;
+                const decodedText = atob(inputText);
+                document.getElementById("outputText").value = decodedText;
+            } catch (e) {
+                document.getElementById("outputText").value = "Error: Cadena de Base64 no vàlida";
+            }
+        }
+    </script>
+</body>
+</html>
