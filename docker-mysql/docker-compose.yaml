@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      LANG: C.UTF-8
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mydatabase
+      MYSQL_INITDB_CHARSET: utf8mb4
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db_data:/var/lib/mysql
+      - ./seed-db:/docker-entrypoint-initdb.d
+volumes:
+  db_data:
