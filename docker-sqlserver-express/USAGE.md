@@ -2,7 +2,7 @@
 
 usage: docker compose -f docker-compose up 
 
-Connection string: Server=localhost,1433;Initial Catalog=MyDb;Integrated Security=True;User Id=sa;Password=letmein_2025;
+Connection string: Server=localhost,1433;Initial Catalog=MyDb;Integrated Security=True;User Id=sa;Password=YourStrengPassword123!;
 
 
 # References #

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JSON to XML Converter</title>
+  <style>
+    body { font-family: Arial; max-width: 800px; margin: 20px auto; padding: 20px; background: #f9f9f9; }
+    textarea { width: 100%; height: 200px; margin-top: 10px; font-family: monospace; }
+    button { margin-top: 10px; padding: 10px 20px; }
+    pre { background: #eee; padding: 10px; white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <h1>JSON to XML Converter</h1>
+
+  <label for="jsonInput">Enter JSON:</label>
+  <textarea id="jsonInput" placeholder='{"nom": "Anna", "edat": 30}'></textarea>
+
+  <button onclick="convertJsonToXml()">Convert to XML</button>
+
+  <h2>XML Result:</h2>
+  <pre id="xmlOutput"></pre>
+
+  <script>
+    function escapeXml(str) {
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+    }
+
+    function jsonToXml(obj, nodeName = 'root') {
+      let xml = '';
+
+      if (typeof obj === 'object' && obj !== null) {
+        xml += `<${nodeName}>`;
+        for (let key in obj) {
+          if (Array.isArray(obj[key])) {
+            obj[key].forEach(item => {
+              xml += jsonToXml(item, key);
+            });
+          } else if (typeof obj[key] === 'object') {
+            xml += jsonToXml(obj[key], key);
+          } else {
+            xml += `<${key}>${escapeXml(String(obj[key]))}</${key}>`;
+          }
+        }
+        xml += `</${nodeName}>`;
+      } else {
+        xml += `<${nodeName}>${escapeXml(String(obj))}</${nodeName}>`;
+      }
+
+      return xml;
+    }
+
+    function convertJsonToXml() {
+      const input = document.getElementById('jsonInput').value;
+      const output = document.getElementById('xmlOutput');
+
+      try {
+        const json = JSON.parse(input);
+        const xml = jsonToXml(json);
+        output.textContent = xml;
+      } catch (e) {
+        output.textContent = "❌ JSON Error: " + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

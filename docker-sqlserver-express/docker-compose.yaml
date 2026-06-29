@@ -7,7 +7,7 @@ services:
       - 1433:1433
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=letmein_2025
+      - SA_PASSWORD=YourStrengPassword123!  # Change this to a strong password
       - MSSQL_PID=Express
     volumes:
       - //c/mounts/sql:/var/opt/mssql/data

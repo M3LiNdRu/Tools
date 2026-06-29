@@ -1,58 +1,62 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Encode/Decode</title>
+    <title>URL Encoder and Decoder</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            padding: 20px;
-            max-width: 600px;
-        }
-        label {
-            display: block;
-            margin: 10px 0 5px;
         }
         textarea {
             width: 100%;
-            height: 80px;
+            height: 100px;
             margin-bottom: 10px;
         }
         button {
-            margin: 5px 0;
+            margin-right: 10px;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
-    <h1>Codificar i Descodificar URL</h1>
-    <form id="urlForm">
-        <label for="inputText">Text original:</label>
-        <textarea id="inputText" placeholder="Escriu el text aquí..."></textarea>
-        
-        <button type="button" onclick="encodeText()">Codificar</button>
-        <button type="button" onclick="decodeText()">Descodificar</button>
-        
-        <label for="outputText">Resultat:</label>
-        <textarea id="outputText" readonly></textarea>
-    </form>
+    <h1>URL Encoder and Decoder</h1>
+    <textarea id="inputText" placeholder="Enter text here..."></textarea>
+    <br>
+    <button onclick="encodeText()">Encode</button>
+    <button onclick="decodeText()">Decode</button>
+    <button onclick="clearFields()">Clear</button>
+    <div class="output">
+        <strong>Result:</strong>
+        <p id="outputText"></p>
+    </div>
 
     <script>
         function encodeText() {
             const input = document.getElementById('inputText').value;
             const encoded = encodeURIComponent(input);
-            document.getElementById('outputText').value = encoded;
+            document.getElementById('outputText').textContent = encoded;
         }
 
         function decodeText() {
             const input = document.getElementById('inputText').value;
             try {
                 const decoded = decodeURIComponent(input);
-                document.getElementById('outputText').value = decoded;
+                document.getElementById('outputText').textContent = decoded;
             } catch (e) {
-                document.getElementById('outputText').value = "Error: Text no vàlid per descodificar.";
+                document.getElementById('outputText').textContent = 'Error: The entered text is not encoded correctly.';
             }
+        }
+
+        function clearFields() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').textContent = '';
         }
     </script>
 </body>

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hex Decoder</title>
+  <style>
+    :root{--bg:#0f1724;--card:#111827;--muted:#9ca3af;--accent:#38bdf8;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:linear-gradient(180deg,#071129 0%, #071826 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .wrap{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
+    textarea{width:100%;min-height:220px;background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:12px;border-radius:8px;color:inherit;font-family:monospace;font-size:13px;resize:vertical}
+    .output{white-space:pre-wrap;word-break:break-word;min-height:220px;padding:12px;font-family:monospace;background:#071222;border-radius:8px;border:1px solid rgba(255,255,255,0.03);}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;color:#042028;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    label.switch{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    select,input[type=checkbox]{padding:6px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .footer{margin-top:12px;color:var(--muted);font-size:13px}
+    .error{color:#ffb4b4;font-size:13px;margin-top:8px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Hex Decoder</h1>
+        <p class="lead">Paste a hex string in the left box and decode it to text or re-encode text to hex. Supports UTF-8 and other encodings.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <strong>Input</strong>
+        <textarea id="input" placeholder="e.g. 48656c6c6f2c20776f726c6421 or 0x48 65 6c 6c 6f"></textarea>
+
+        <div class="controls">
+          <button id="decodeBtn">Decode →</button>
+          <button id="encodeBtn" class="ghost">← Encode</button>
+          <button id="clearBtn" class="ghost">Clear</button>
+          <button id="copyInput" class="ghost">Copy Input</button>
+        </div>
+
+        <div style="margin-top:10px" class="row">
+          <label class="switch"><input type="checkbox" id="ignoreWs" checked> Ignore whitespace</label>
+          <label class="switch"><input type="checkbox" id="ignoreNonHex"> Strip non-hex characters</label>
+          <label style="display:inline-flex;align-items:center;gap:8px;color:var(--muted)">If odd: <select id="oddPolicy"><option value="error">Error</option><option value="pad">Pad with 0</option><option value="prefix">Prefix with 0</option></select></label>
+        </div>
+
+        <div style="margin-top:10px" class="row">
+          <label style="color:var(--muted)">Encoding: <select id="encoding"><option>utf-8</option><option>iso-8859-1</option><option>utf-16le</option><option>utf-16be</option></select></label>
+          <label style="color:var(--muted)">Case: <select id="hexCase"><option value="lower">lower</option><option value="upper">UPPER</option></select></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <strong>Output</strong>
+        <div id="output" class="output" contenteditable="false"></div>
+        <div class="error" id="error"></div>
+
+        <div class="controls" style="margin-top:10px">
+          <button id="copyOut">Copy Output</button>
+          <button id="downloadBtn" class="ghost">Download as .txt</button>
+          <button id="showHexPairs" class="ghost">Show hex pairs</button>
+        </div>
+
+        <div class="footer">Tip: Use Encode to convert text to hex. You can paste hex produced by common tools (with 0x prefixes or spaces).</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const errorEl = document.getElementById('error');
+    const decodeBtn = document.getElementById('decodeBtn');
+    const encodeBtn = document.getElementById('encodeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyOut = document.getElementById('copyOut');
+    const copyInput = document.getElementById('copyInput');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const showHexPairs = document.getElementById('showHexPairs');
+
+    function sanitizeHex(s){
+      const ignoreWs = document.getElementById('ignoreWs').checked;
+      const stripNon = document.getElementById('ignoreNonHex').checked;
+      if(ignoreWs) s = s.replace(/\s+/g,'');
+      // remove 0x prefix occurrences
+      s = s.replace(/0x/ig,'');
+      if(stripNon) s = s.replace(/[^0-9a-fA-F]/g,'');
+      return s;
+    }
+
+    function hexToBytes(hex){
+      hex = sanitizeHex(hex);
+      const oddPolicy = document.getElementById('oddPolicy').value;
+      if(hex.length % 2 === 1){
+        if(oddPolicy === 'error') throw new Error('Hex string has odd length');
+        if(oddPolicy === 'pad') hex = hex + '0';
+        if(oddPolicy === 'prefix') hex = '0' + hex;
+      }
+      const bytes = new Uint8Array(hex.length/2);
+      for(let i=0;i<hex.length;i+=2){
+        const pair = hex.substr(i,2);
+        if(!/^[0-9a-fA-F]{2}$/.test(pair)) throw new Error('Invalid hex pair: "'+pair+'" at index '+i);
+        bytes[i/2] = parseInt(pair,16);
+      }
+      return bytes;
+    }
+
+    function decodeHex(){
+      errorEl.textContent='';
+      try{
+        const enc = document.getElementById('encoding').value;
+        const bytes = hexToBytes(input.value);
+        let text;
+        try{
+          const decoder = new TextDecoder(enc);
+          text = decoder.decode(bytes);
+        }catch(e){
+          // fallback: interpret bytes as Latin1
+          text = Array.from(bytes).map(b=>String.fromCharCode(b)).join('');
+        }
+        output.textContent = text;
+      }catch(e){
+        output.textContent='';
+        errorEl.textContent = e.message || String(e);
+      }
+    }
+
+    function encodeText(){
+      errorEl.textContent='';
+      try{
+        const enc = document.getElementById('encoding').value;
+        const hexCase = document.getElementById('hexCase').value;
+        let bytes;
+        try{
+          const encoder = new TextEncoder(enc);
+          // Note: TextEncoder in browsers supports utf-8 only for construction; other encodings may not be supported.
+          // So we handle utf-8 specially; for others we fall back to manual mapping for iso-8859-1 and utf-16.
+          if(enc === 'utf-8'){
+            bytes = encoder.encode(input.value);
+          } else if(enc === 'iso-8859-1'){
+            bytes = new Uint8Array(Array.from(input.value).map(ch=>ch.charCodeAt(0)&0xFF));
+          } else if(enc === 'utf-16le'){
+            const arr = [];
+            for(let i=0;i<input.value.length;i++){
+              const code = input.value.charCodeAt(i);
+              arr.push(code & 0xFF, (code>>8)&0xFF);
+            }
+            bytes = new Uint8Array(arr);
+          } else if(enc === 'utf-16be'){
+            const arr = [];
+            for(let i=0;i<input.value.length;i++){
+              const code = input.value.charCodeAt(i);
+              arr.push((code>>8)&0xFF, code & 0xFF);
+            }
+            bytes = new Uint8Array(arr);
+          } else {
+            // default utf-8
+            bytes = encoder.encode(input.value);
+          }
+        }catch(_){
+          // safest fallback: map char codes low byte
+          bytes = new Uint8Array(Array.from(input.value).map(ch=>ch.charCodeAt(0)&0xFF));
+        }
+
+        const hex = Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+        output.textContent = (hexCase === 'upper') ? hex.toUpperCase() : hex.toLowerCase();
+      }catch(e){
+        output.textContent='';
+        errorEl.textContent = e.message || String(e);
+      }
+    }
+
+    decodeBtn.addEventListener('click', decodeHex);
+    encodeBtn.addEventListener('click', encodeText);
+    clearBtn.addEventListener('click', ()=>{input.value=''; output.textContent=''; errorEl.textContent='';});
+    copyOut.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(output.textContent); }catch(e){ alert('Copy failed: '+e); }
+    });
+    copyInput.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(input.value); }catch(e){ alert('Copy failed: '+e); }
+    });
+
+    downloadBtn.addEventListener('click', ()=>{
+      const blob = new Blob([output.textContent], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'decoded.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    showHexPairs.addEventListener('click', ()=>{
+      try{
+        const bytes = hexToBytes(input.value);
+        const pairs = Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+        output.textContent = pairs;
+      }catch(e){ errorEl.textContent = e.message; }
+    });
+
+    // keyboard shortcut: Ctrl+Enter to decode
+    input.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey) && e.key === 'Enter'){ decodeHex(); } });
+
+    // small helper: paste event remove non-printable except whitespace
+    input.addEventListener('paste', (ev)=>{
+      // allow default paste; but optionally could sanitize after paste
+      setTimeout(()=>{ /* no-op */ },50);
+    });
+
+    // init with example
+    input.value = '48656c6c6f2c20776f726c6421';
+    decodeHex();
+  </script>
+</body>
+</html>

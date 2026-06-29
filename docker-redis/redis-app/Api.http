@@ -1,0 +1,10 @@
+@redis_app_HostAddress = http://localhost:5056
+
+GET {{redis_app_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+curl -X POST "http://localhost:5056/api/cache/set?key=test&value=hello" -H "Content-Type: application/json" -d "{}"
+
+     
+curl -X GET "http://localhost:5056/api/cache/get?key=test"
