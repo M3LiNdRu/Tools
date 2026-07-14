@@ -1,0 +1,16 @@
+[core]
+	editor = vim
+[user]
+	email = roger.calaf@gmail.com
+	name = Roger Calaf Planell
+	signinkey = A6826CDBE45ED628CF9885D969E6996256E762B1
+	signingkey = 69E6996256E762B1
+[commit]
+	gpgsign = true
+[gpg]
+	program = /usr/bin/gpg
+[alias]
+	logline = log --oneline
+[credential]
+	useHttpPath = true
+	helper = store
